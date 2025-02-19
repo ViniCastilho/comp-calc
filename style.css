@@ -1,0 +1,15 @@
+body {
+    font-family: monospace;
+}
+
+input {
+    font-family: monospace;
+}
+
+button {
+    font-family: monospace;
+}
+
+button::-webkit-file-upload-button {
+    font-family: monospace;
+}

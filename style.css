@@ -10,6 +10,10 @@ button {
     font-family: monospace;
 }
 
-button::-webkit-file-upload-button {
+input {
+    font-family: monospace;
+}
+
+input::file-selector-button {
     font-family: monospace;
 }

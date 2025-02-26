@@ -17,3 +17,12 @@ input {
 input::file-selector-button {
     font-family: monospace;
 }
+
+table {
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: calc(1rem/4);
+    border: 1px solid;
+}

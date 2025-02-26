@@ -1,12 +1,16 @@
 let btnCalc = document.querySelector('#btn-calc');
 let btnFile = document.querySelector('#btn-file');
 let txtResult = document.querySelector('#txt-result');
-let tblTokens = document.querySelector('#token-table')
+let tblTokens = document.querySelector('#token-table');
+let divEditor = document.querySelector('#editor');
+let divLines = document.querySelector('#lines');
 
-const ID_DEFAULT = 0;
-const ID_INVALID = 1;
-const ID_NUMBER = 2;
-const ID_OPERATOR = 3;
+let mapIdentifierName = {
+	ID_DEFAULT: 'PADRÃO',
+	ID_INVALID: 'INVÁLIDO',
+	ID_NUMBER: 'NÚMERO',
+	ID_OPERATOR: 'OPERADOR',
+};
 
 let mapOperatorPriority = {
 	'+': 0,
@@ -77,7 +81,7 @@ function updateDocTable(tokens) {
 
 function runLexer(stream) {
 	let column = 0;
-	let id = ID_DEFAULT;
+	let id = mapIdentifierName.ID_DEFAULT;
 	let decimalFound = false;
 	let tokens = [];
 	let lines = stream.split(/\x0A/);
@@ -89,44 +93,44 @@ function runLexer(stream) {
 			let char = row.substring(j, j+1);
 			let isValidChar = `${char}` in mapValidSymbols;
 			let isOperatorChar = `${char}` in mapOperatorPriority;
-			if (id === ID_DEFAULT) {
+			if (id === mapIdentifierName.ID_DEFAULT) {
 				if (!isValidChar) {
 					value = '';
 					let hexCode = char.charCodeAt(0).toString(16).toUpperCase();
 					docError(`Invalid symbol (0x${hexCode}) detected.`);
-					tokens.push(createToken(char, ID_INVALID, i+1, j+1));
+					tokens.push(createToken(char, mapIdentifierName.ID_INVALID, i+1, j+1));
 				} else if (isOperatorChar) {
 					value = '';
-					tokens.push(createToken(char, ID_OPERATOR, i+1, j+1));
+					tokens.push(createToken(char, mapIdentifierName.ID_OPERATOR, i+1, j+1));
 				} else if (char.match(/([0-9])/) !== null) {
 					column = j+1;
-					id = ID_NUMBER;
+					id = mapIdentifierName.ID_NUMBER;
 					value = char;
 					decimalFound = char.charCodeAt(0) === ('.').charCodeAt(0);
 				}
-			} else if (id === ID_NUMBER) {
+			} else if (id === mapIdentifierName.ID_NUMBER) {
 				let isDecimalSymbol = char.charCodeAt(0) === ('.').charCodeAt(0);
 				if (!isValidChar) {
-					tokens.push(createToken(value, ID_NUMBER, i+1, column));
-					id = ID_DEFAULT;
+					tokens.push(createToken(value, mapIdentifierName.ID_NUMBER, i+1, column));
+					id = mapIdentifierName.ID_DEFAULT;
 					value = '';
 
 					let hexCode = char.charCodeAt(0).toString(16).toUpperCase();
 					docError(`Invalid symbol (0x${hexCode}) detected.`);
-					tokens.push(createToken(char, ID_INVALID, i+1, j+1));
+					tokens.push(createToken(char, mapIdentifierName.ID_INVALID, i+1, j+1));
 				} else if (isOperatorChar) {
-					tokens.push(createToken(value, ID_NUMBER, i+1, column));
+					tokens.push(createToken(value, mapIdentifierName.ID_NUMBER, i+1, column));
 					value = '';
-					id = ID_DEFAULT;
+					id = mapIdentifierName.ID_DEFAULT;
 					
-					tokens.push(createToken(char, ID_OPERATOR, i+1, j+1));
+					tokens.push(createToken(char, mapIdentifierName.ID_OPERATOR, i+1, j+1));
 				} else if (char.match(/([0-9])/) !== null) {
 					value += char;
 				} else if (isDecimalSymbol) {
 					if (decimalFound) {
-						tokens.push(createToken(value, ID_NUMBER, i+1, column));
+						tokens.push(createToken(value, mapIdentifierName.ID_NUMBER, i+1, column));
 						column = j+1;
-						id = ID_NUMBER;
+						id = mapIdentifierName.ID_NUMBER;
 						value = char;
 					} else {
 						value += char;
@@ -135,11 +139,21 @@ function runLexer(stream) {
 				}
 			}
 		}
-		if (value.length > 0 && id === ID_NUMBER) {
-			tokens.push(createToken(value, ID_NUMBER, i+1, column));
+		if (value.length > 0 && id === mapIdentifierName.ID_NUMBER) {
+			tokens.push(createToken(value, mapIdentifierName.ID_NUMBER, i+1, column));
 		}
 	}
 	return tokens;
+}
+
+divEditor.oninput = () => {
+	divLines.innerText = '';
+	let split = divEditor.innerText.match(/(\n)/);
+	let count = split.length;
+	console.log(split, count);
+	for (let i = 0; i < count; i++) {
+		divLines.innerText = `${divLines.innerText}${i+1}\n`;
+	}
 }
 
 // EM PROGRESSO
@@ -167,7 +181,9 @@ function calcLoad(event) {
 	//let pattern = /(\x20|\x09|\x0A|\x0D)/g;
 	//stream = stream.replaceAll(pattern, '');
 	//console.log(stream);
+	divEditor.innerText = stream;
 	let tokens = runLexer(stream);
+	divEditor.oninput();
 	updateDocTable(tokens);
 	runSyntax(tokens);
 }

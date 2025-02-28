@@ -5,6 +5,7 @@ let tblTokens = document.querySelector('#token-table');
 let divEditor = document.querySelector('#editor');
 let divLines = document.querySelector('#lines');
 let btnLoad = document.querySelector('#btn-load');
+let btnSave = document.querySelector('#btn-save');
 
 let mapIdentifierName = {
 	ID_DEFAULT: 'PADRÃO',
@@ -149,6 +150,16 @@ function runLexer(stream) {
 		}
 	}
 	return tokens;
+}
+
+btnSave.onclick = () => {
+	let link = document.createElement('a');
+	let data = divEditor.innerText;
+	let file = new Blob([data], { type: 'text/plain' });
+	link.href = URL.createObjectURL(file);
+	link.download = 'comp-calc.txt';
+	link.click();
+	URL.revokeObjectURL(link.href);
 }
 
 divEditor.oninput = () => {

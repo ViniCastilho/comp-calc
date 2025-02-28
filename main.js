@@ -4,6 +4,7 @@ let txtResult = document.querySelector('#txt-result');
 let tblTokens = document.querySelector('#token-table');
 let divEditor = document.querySelector('#editor');
 let divLines = document.querySelector('#lines');
+let btnLoad = document.querySelector('#btn-load');
 
 let mapIdentifierName = {
 	ID_DEFAULT: 'PADRÃO',
@@ -59,6 +60,9 @@ function createToken(value, id, ln0, cl0) {
 function updateDocTable(tokens) {
 	let body = tblTokens.children[0];
 	let rows = body.children;
+	for (let i = rows.length-1; i > 1 ; i--) {
+		body.removeChild(rows[i]);
+	}
 	for (let i = rows.length-1; i < tokens.length; i++) {
 		let r = document.createElement('tr');
 		body.appendChild(r);
@@ -88,6 +92,7 @@ function runLexer(stream) {
 	for (let i = 0; i < lines.length; i++) {
 		let row = lines[i];
 		column = 0;
+		id = mapIdentifierName.ID_DEFAULT;
 		let value = '';
 		for (let j = 0; j < row.length; j++) {
 			let char = row.substring(j, j+1);
@@ -102,7 +107,7 @@ function runLexer(stream) {
 				} else if (isOperatorChar) {
 					value = '';
 					tokens.push(createToken(char, mapIdentifierName.ID_OPERATOR, i+1, j+1));
-				} else if (char.match(/([0-9])/) !== null) {
+				} else if (char.match(/([.0-9])/) !== null) {
 					column = j+1;
 					id = mapIdentifierName.ID_NUMBER;
 					value = char;
@@ -148,11 +153,17 @@ function runLexer(stream) {
 
 divEditor.oninput = () => {
 	divLines.innerText = '';
-	let split = divEditor.innerText.match(/(\n)/);
-	let count = split.length;
-	console.log(split, count);
+	let match = divEditor.innerText.match(/(\n)/g);
+	let count = 0;
+	if (match === null) {
+		count = 1;
+	} else if (divEditor.innerText.match(/\x0A$/) === null) {
+		count = match.length + 1;
+	} else {
+		count = match.length;
+	}
 	for (let i = 0; i < count; i++) {
-		divLines.innerText = `${divLines.innerText}${i+1}\n`;
+		divLines.innerText = `${divLines.innerText}${i+1}.\n`;
 	}
 }
 
@@ -173,29 +184,32 @@ function runSyntax(tokens) {
 		}
 
 	}
-	console.log(tokens);
 }
 
-function calcLoad(event) {
+function calcFileLoad(event) {
 	let stream = event.target.result;
 	//let pattern = /(\x20|\x09|\x0A|\x0D)/g;
 	//stream = stream.replaceAll(pattern, '');
 	//console.log(stream);
 	divEditor.innerText = stream;
-	let tokens = runLexer(stream);
 	divEditor.oninput();
-	updateDocTable(tokens);
-	runSyntax(tokens);
 }
 
-function calcError(event) {
+function calcFileError(event) {
 	docError('There was a problem loading the file.')
 }
 
 btnCalc.onclick = () => {
+	let stream = divEditor.innerText;
+	let tokens = runLexer(stream);
+	updateDocTable(tokens);
+	runSyntax(tokens);
+}
+
+btnLoad.onclick = () => {
 	let upload = btnFile.files[0];
 	let reader = new FileReader();
 	reader.readAsText(upload, 'UTF-8');
-	reader.onload = calcLoad;
-	reader.onerror = calcError;
+	reader.onload = calcFileLoad;
+	reader.onerror = calcFileError;
 }

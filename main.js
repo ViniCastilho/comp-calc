@@ -142,6 +142,11 @@ function runLexer(stream) {
 						value += char;
 					}
 					decimalFound = true;
+				} else {
+					tokens.push(createToken(value, mapIdentifierName.ID_NUMBER, i+1, column));
+					value = '';
+					id = mapIdentifierName.ID_DEFAULT;
+					decimalFound = false;
 				}
 			}
 		}
